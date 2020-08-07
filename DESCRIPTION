@@ -1,0 +1,13 @@
+Package: ubzutils
+Type: Package
+Title: Provides utility functions for working at UBZ
+Version: 0.1.0
+Author: Jan Knappe
+Maintainer: Jan Knappe <jan.knappe@gmail.com>
+Description: This packages provides utility functions for working at the 
+    Center for Environmental and Biotechnology (UBZ) at the Helmholtz-Center
+    for Environmental Research (UFZ) in Leipzig. Functions include, but are not 
+    limited to, utilities for data download from our research infrastructure.
+License: MIT
+Encoding: UTF-8
+LazyData: true
