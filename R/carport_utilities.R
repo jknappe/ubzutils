@@ -1,6 +1,6 @@
 #' Download carport load cell data
 #'
-#' copies carport load cell data files from UFZ SFTP server to local directory.
+#' copies carport load cell data files as is from UFZ SFTP server to local directory.
 #'
 #' This function downloads all (or only new) available load cell data files from
 #' the Revolution Pi running at the UBZ carport green roof. To run the function,
@@ -22,7 +22,7 @@
 #'   (default), FALSE downloads all available data from the server.
 #' @return Data files in CSV format in the specified folder and a summary message.
 
-cplc_pull <-
+cp_pull_loadcells <-
     function (save_to, ssh_key, only_new = TRUE) {
 
     # ERRORS
@@ -54,14 +54,14 @@ cplc_pull <-
     # concatenate absolute path for saving directory
     save_path =
         # if path is absolute
-        if (stringr::str_detect(save_to, ":/")) {
+        if (str_detect(save_to, ":/")) {
             save_to
             # if path is relative
         } else {
             paste0(getwd(), save_to)
         }
     #
-    # test if path is valid exists
+    # test if path is exists
     # TODO
     #
     # create directory # TODO write own message here if directory already exists
@@ -70,7 +70,7 @@ cplc_pull <-
     # concatenate absolute path for ssh key file
     ssh_path =
         # if path is absolute
-        if (stringr::str_detect(ssh_key, ":/")) {
+        if (str_detect(ssh_key, ":/")) {
             save_to
             # if path is relative
         } else {
@@ -91,7 +91,7 @@ cplc_pull <-
     filenames_local =
         list.files(save_path) %>%
         # filter for hourly data files
-        stringr::str_subset(pattern = "h.csv")
+        str_subset(pattern = "h.csv")
     #
     message("*     ", length(filenames_local), " existing file(s) detected in local folder.")
     #
@@ -99,16 +99,16 @@ cplc_pull <-
     # currently, file names on remote have no leading zeros for month and day
     filenames_local_for_remote =
         filenames_local %>%
-        stringr::str_replace_all(pattern = "_00_", replacement = "_0_") %>%
-        stringr::str_replace_all(pattern = "_01_", replacement = "_1_") %>%
-        stringr::str_replace_all(pattern = "_02_", replacement = "_2_") %>%
-        stringr::str_replace_all(pattern = "_03_", replacement = "_3_") %>%
-        stringr::str_replace_all(pattern = "_04_", replacement = "_4_") %>%
-        stringr::str_replace_all(pattern = "_05_", replacement = "_5_") %>%
-        stringr::str_replace_all(pattern = "_06_", replacement = "_6_") %>%
-        stringr::str_replace_all(pattern = "_07_", replacement = "_7_") %>%
-        stringr::str_replace_all(pattern = "_08_", replacement = "_8_") %>%
-        stringr::str_replace_all(pattern = "_09_", replacement = "_9_")
+        str_replace_all(pattern = "_00_", replacement = "_0_") %>%
+        str_replace_all(pattern = "_01_", replacement = "_1_") %>%
+        str_replace_all(pattern = "_02_", replacement = "_2_") %>%
+        str_replace_all(pattern = "_03_", replacement = "_3_") %>%
+        str_replace_all(pattern = "_04_", replacement = "_4_") %>%
+        str_replace_all(pattern = "_05_", replacement = "_5_") %>%
+        str_replace_all(pattern = "_06_", replacement = "_6_") %>%
+        str_replace_all(pattern = "_07_", replacement = "_7_") %>%
+        str_replace_all(pattern = "_08_", replacement = "_8_") %>%
+        str_replace_all(pattern = "_09_", replacement = "_9_")
     #
     message("* Checking remote server...") #TODO add error message here if authentication fails
     #
@@ -116,7 +116,7 @@ cplc_pull <-
     filenames_remote =
         # authenticate with SSH private key on UFZ FTP server
         # and read out available file names
-        RCurl::getURL(url = "sftp://files.ufz.de/ubz-carport-gruendach/carport_messungen/",
+        getURL(url = "sftp://files.ufz.de/ubz-carport-gruendach/carport_messungen/",
                username = "ubz-carport-gruendach",
                keypasswd = "",
                dirlistonly = TRUE,
@@ -126,7 +126,7 @@ cplc_pull <-
         strsplit(., '\n') %>%
         unlist()  %>%
         # filter for hourly data files
-        stringr::str_subset(pattern = "h.csv")
+        str_subset(pattern = "h.csv")
     #
     # subset list of files to download
     filenames_download =
@@ -148,9 +148,9 @@ cplc_pull <-
     data_new_raw =
         filenames_download %>%
         # iterate over all file names and download the data
-        # plyr:plyr::llply() is similar to lapply() but enables progress bars
-        plyr::llply(function (x) {
-            RCurl::getURL(url = paste0("sftp://files.ufz.de/ubz-carport-gruendach/carport_messungen/", x),
+        # plyr:llply() is similar to lapply() but enables progress bars
+        llply(function (x) {
+            getURL(url = paste0("sftp://files.ufz.de/ubz-carport-gruendach/carport_messungen/", x),
                    username = "ubz-carport-gruendach",
                    keypasswd = "",
                    dirlistonly = TRUE,
@@ -158,17 +158,15 @@ cplc_pull <-
                    ssh.private.keyfile = ssh_path) %>%
                 strsplit(., '\n') %>%
                 unlist() %>%
-                tibble::tibble() %>%
-                dplyr::rename(content = ".") %>%
-                dplyr::mutate(origin = x)
+                tibble() %>%
+                rename(content = ".") %>%
+                mutate(origin = x)
         },
         .progress = "text"
         )
     #
     message("*     ", length(data_new_raw), " file(s) successfully downloaded.", "\n")
     #TODO: add control that length(data_new_raw) == length(filenames_download)
-    #TODO: add progress bar
-    #
     #
     # clean data
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -178,50 +176,50 @@ cplc_pull <-
         # iterate over all list entries (i.e. data files) and clean
         lapply(function (x)
             x %>%
-                tidyr::separate(content,
+                separate(content,
                          into = c("datetime", "tot_weight", "net_weight", "cell_1", "cell_2", "cell_3", "cell_4", "cell_5", "cell_6"),
                          sep = ";") %>%
                 # remove old header
-                dplyr::filter(datetime != "DATETIME") %>%
+                filter(datetime != "DATETIME") %>%
                 # add leading zeros to datetime
-                tidyr::separate(datetime,
+                separate(datetime,
                          into = c("ymd", "HMS"),
                          sep = " ") %>%
-                tidyr::separate(ymd,
+                separate(ymd,
                          into = c("y", "m", "d"),
                          sep = "-") %>%
-                tidyr::separate(HMS,
+                separate(HMS,
                          into = c("H", "M", "S"),
                          sep = ":") %>%
-                dplyr::mutate(m = stringr::str_pad(m, 2, pad = "0"),
-                       d = stringr::str_pad(d, 2, pad = "0"),
-                       H = stringr::str_pad(H, 2, pad = "0"),
-                       M = stringr::str_pad(M, 2, pad = "0"),
-                       S = stringr::str_pad(S, 6, pad = "0")) %>%
-                tidyr::unite(ymd,
+                mutate(m = str_pad(m, 2, pad = "0"),
+                       d = str_pad(d, 2, pad = "0"),
+                       H = str_pad(H, 2, pad = "0"),
+                       M = str_pad(M, 2, pad = "0"),
+                       S = str_pad(S, 6, pad = "0")) %>%
+                unite(ymd,
                       y, m, d,
                       sep = "-",
                       remove = TRUE) %>%
-                tidyr::unite(HMS,
+                unite(HMS,
                       H, M, S,
                       sep = ":",
                       remove = TRUE) %>%
-                tidyr::unite(datetime,
+                unite(datetime,
                       ymd, HMS,
                       sep = " ",
                       remove = TRUE)  %>%
                 # add leading zeros to origin
-                tidyr::separate(origin,
+                separate(origin,
                          into = c("y", "m", "d", "H"),
                          sep = "_") %>%
-                dplyr::mutate(m = stringr::str_pad(m, 2, pad = "0"),
-                       d = stringr::str_pad(d, 2, pad = "0")) %>%
-                tidyr::unite(origin,
+                mutate(m = str_pad(m, 2, pad = "0"),
+                       d = str_pad(d, 2, pad = "0")) %>%
+                unite(origin,
                       y, m, d, H,
                       sep = "_",
                       remove = TRUE) %>%
                 # parse the correct column types
-                dplyr::mutate(datetime = as.POSIXct(datetime),
+                mutate(datetime = as.POSIXct(datetime),
                        datetime = ymd_hms(datetime),
                        tot_weight = as.numeric(tot_weight),
                        net_weight  = as.numeric(net_weight ),
@@ -236,22 +234,21 @@ cplc_pull <-
     # save files
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #
-    # TODO delete duplicate files first if all data is downloaded
-    # TODO use save_path instead of save_to
+    # TODO remove `only_new` argument
     #
     message("* Saving data files in local folder...")
     #
     data_new_clean %>%
-        plyr::llply(function (x) {
-            readr::write_csv(x %>%
+        llply(function (x) {
+            write_csv(x %>%
                           select(-origin),
                       path =
                           # if path is absolute
-                          if (stringr::str_detect(save_to, ":/")) {
-                              paste0(save_to, dplyr::distinct(x, origin))
+                          if (str_detect(save_to, ":/")) {
+                              paste0(save_to, distinct(x, origin))
                               # if path is relative
                           } else {
-                              paste0(getwd(), save_to, dplyr::distinct(x, origin))
+                              paste0(getwd(), save_to, distinct(x, origin))
                           } )},
             .progress = "text"
         )
