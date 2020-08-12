@@ -56,9 +56,8 @@ The functions are designed to work in a pipe, e.g. as:
 
 ```{r example_cp_pipe, eval = FALSE}
 loadcell_data <-
-    cp_pull_loadcells(save_to = "/data/load-cells",
-                      ssh_key = "/ssh-vps/carport-openssh-vps.ppk",
-                      only_new = TRUE) %>%
+    cp_pull_loadcells(save_to = "data/load-cells/",
+                      ssh_key = "ssh-vps/carport-openssh-vps.ppk") %>%
     cp_tidy_loadcells() %>%
     cp_load_loadcells()
 ```
