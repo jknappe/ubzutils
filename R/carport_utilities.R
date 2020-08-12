@@ -18,12 +18,10 @@
 #' @param save_to Path to the folder where the data should be saved (also used
 #'   to check existing vs. new data on the server).
 #' @param ssh_key Path to private SSH key for authentication (.ppk file).
-#' @param only_new Logical. TRUE downloads only new data from the server
-#'   (default), FALSE downloads all available data from the server.
 #' @return Data files in CSV format in the specified folder and a summary message.
 
 cp_pull_loadcells <-
-    function (save_to, ssh_key, only_new = TRUE) {
+    function (save_to, ssh_key) {
 
     # ERRORS
     #============================================
@@ -39,11 +37,6 @@ cp_pull_loadcells <-
     if (!is.character(ssh_key)) stop ("Parameter 'ssh_key' must be a valid path name. Please supply a character string.")
     # ssh_key ends with .ppk
     if (!endsWith(ssh_key, ".ppk")) stop ("Parameter 'ssh_key' must be a valid private SSH key file. Please refer to a file with extension '.ppk'.")
-    #
-    # only_new is provided
-    if (missing(only_new)) stop ("Parameter 'only_new' is not supplied.")
-    # only_new is logical
-    if (!is.logical(only_new)) stop ("Parameter 'only_new' must be logical.")
     #
     # FUNCTION
     #=============================================
@@ -130,13 +123,7 @@ cp_pull_loadcells <-
     #
     # subset list of files to download
     filenames_download =
-        # if all data should be downloaded
-        if (only_new == FALSE) {
-            filenames_remote
-            # if only new data should be downloaded
-        } else {
-            setdiff(filenames_remote, filenames_local_for_remote)
-        }
+        setdiff(filenames_remote, filenames_local_for_remote)
     #
     message("*     ", length(filenames_download), " new file(s) detected on remote server for downloading.", "\n")
     #
@@ -232,8 +219,6 @@ cp_pull_loadcells <-
     #
     # save files
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #
-    # TODO remove `only_new` argument
     #
     message("* Saving data files in local folder...")
     #
