@@ -54,7 +54,7 @@ Please refer to each individual function's documentation for a more detailed des
 
 The functions are designed to work in a pipe, e.g. as:
 
-```{r example_cp_pipe}
+```{r example_cp_pipe, eval = FALSE}
 loadcell_data <-
     cp_pull_loadcells(save_to = "/data/load-cells",
                       ssh_key = "/ssh-vps/carport-openssh-vps.ppk",
