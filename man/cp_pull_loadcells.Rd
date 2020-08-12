@@ -4,16 +4,13 @@
 \alias{cp_pull_loadcells}
 \title{Download carport load cell data}
 \usage{
-cp_pull_loadcells(save_to, ssh_key, only_new = TRUE)
+cp_pull_loadcells(save_to, ssh_key)
 }
 \arguments{
 \item{save_to}{Path to the folder where the data should be saved (also used
 to check existing vs. new data on the server).}
 
 \item{ssh_key}{Path to private SSH key for authentication (.ppk file).}
-
-\item{only_new}{Logical. TRUE downloads only new data from the server
-(default), FALSE downloads all available data from the server.}
 }
 \value{
 Data files in CSV format in the specified folder and a summary message.
@@ -26,11 +23,12 @@ This function downloads all (or only new) available load cell data files from
 the Revolution Pi running at the UBZ carport green roof. To run the function,
 you need a valid private SSH key to authenticate yourself on the FTP server.
 The data files are saved in a local directory. Note, that this function does
-export any data into your R environment, please use other function in the
+not import any data into your R environment, please use other function in the
 \emph{carport utility functions} group to import the data into your R
 environment.
 }
 \seealso{
-\code{\link{test}} for test, \code{\link{test}} for test.
+Other carport utility functions: 
+\code{\link{cp_tidy_loadcells}()}
 }
 \concept{carport utility functions}

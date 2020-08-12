@@ -193,10 +193,10 @@ cp_pull_loadcells <-
 #' cleans load cell data files available in local folder.
 #'
 #' This function loads carport load cell data files available in a specified
-#' local folder, cleans the data, converts them into tidy format and saves a
-#' .rds file containing all observations. Note, that this function does not
-#' import any data into your R environment, please use other function in the
-#' \emph{carport utility functions} group to import the data into your R
+#' local folder, cleans the data, converts them into tidy format and saves an
+#' uncompressed .rds file containing all observations. Note, that this function
+#' does not import any data into your R environment, please use other function
+#' in the \emph{carport utility functions} group to import the data into your R
 #' environment.
 #'
 #' @export

@@ -46,9 +46,9 @@ These functions are related to processing data from the carport green roof. All 
 
 | Function | Short Description |
 |-----|-----|
-| cp_pull_loadcells()    | copies carport load cell data files as is from UFZ SFTP server to local directory. 
-| cp_tidy_loadcells()    | cleans the data, converts them into tidy format and saves them as .RData file.    
-| cp_load_loadcells()    | loads all available carport load cell data from the .RData file into your R environment.    
+| `cp_pull_loadcells()`    | copies carport load cell data files as is from UFZ SFTP server to local directory. 
+| `cp_tidy_loadcells()`    | cleans the data, converts them into tidy format and saves them as uncompressed .rds file.    
+| `cp_load_loadcells()`    | loads all available carport load cell data from the .rds file into your R environment.    
 
 Please refer to each individual function's documentation for a more detailed description of use cases, the arguments and outputs.
 
@@ -62,3 +62,14 @@ loadcell_data <-
     cp_tidy_loadcells() %>%
     cp_load_loadcells()
 ```
+
+### Helper Functions
+
+These functions are internal helper functions for the package and might be exported (can be used in the R environment) if potentially useful for other use cases outside of this package.
+
+| Function | Status | Short Description |
+|-----|-----|-----|
+| `is_error()` | exported   | checks if a function returns an error or not. 
+| `key_valid()` | hidden  | tests if the provided SSH key is valid.    
+
+Please refer to each individual function's documentation for a more detailed description of use cases, the arguments and outputs.
