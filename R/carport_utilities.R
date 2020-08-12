@@ -219,8 +219,7 @@ cp_pull_loadcells <-
                       sep = "_",
                       remove = TRUE) %>%
                 # parse the correct column types
-                mutate(datetime = as.POSIXct(datetime),
-                       datetime = ymd_hms(datetime),
+                mutate(datetime = format(as.POSIXct(datetime), usetz = TRUE),
                        tot_weight = as.numeric(tot_weight),
                        net_weight  = as.numeric(net_weight ),
                        cell_1  = as.numeric(cell_1),
