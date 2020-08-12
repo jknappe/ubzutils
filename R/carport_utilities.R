@@ -10,14 +10,13 @@
 #' the Revolution Pi running at the UBZ carport green roof. To run the function,
 #' you need a valid private SSH key to authenticate yourself on the FTP server.
 #' The data files are saved in a local directory. Note, that this function does
-#' export any data into your R environment, please use other function in the
+#' not import any data into your R environment, please use other function in the
 #' \emph{carport utility functions} group to import the data into your R
 #' environment.
 #'
 #' @export
 #'
 #' @family carport utility functions
-#' @seealso \code{\link{test}} for test, \code{\link{test}} for test.
 #'
 #' @param save_to Path to the folder where the data should be saved (also used
 #'   to check existing vs. new data on the server).
@@ -41,6 +40,13 @@ cp_pull_loadcells <-
         # save_to is character
         if (!is.character(save_to)) {
             stop ("Parameter 'save_to' must be a valid path name. Please supply a character string.")
+        }
+        # clean save_to
+        if (str_starts(save_to, "/")) {
+            save_to = str_replace(save_to, "/", "")
+        }
+        if (!str_ends(save_to, "/")) {
+            save_to = paste0(save_to, "/", "")
         }
 
         # ssh_key is provided
@@ -69,68 +75,24 @@ cp_pull_loadcells <-
                                   ssh_key = ssh_key)) {
             stop ("Provided 'ssh_key' is not valid for authentication on the remote server.")
         }
+
+        # create save_to folder
+        dir.create(file.path(save_to))
         #
         # FUNCTION
         #=============================================
         #
-        # get absolute paths
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #
-        # concatenate absolute path for saving directory
-        save_path =
-            # if path is absolute
-            if (str_detect(save_to, ":/")) {
-                save_to
-                # if path is relative
-            } else {
-                paste0(getwd(), save_to)
-            }
-        #
-        # test if path is exists
-        # TODO
-        #
-        # create directory # TODO write own message here if directory already exists
-        dir.create(file.path(save_path))
         #
         # define which data files to download
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #
-        message("* Checking local folder...")
-        #
         # get file names from local directory
         filenames_local =
-            list.files(save_path) %>%
+            list.files(save_to) %>%
             # filter for hourly data files
             str_subset(pattern = "h.csv")
         #
-        message("*     ", length(filenames_local), " existing file(s) detected in local folder.")
-        #
-        # process local filenames to match remote structure
-        # currently, file names on remote have no leading zeros for month and day
-        filenames_local_for_remote =
-            filenames_local %>%
-            str_replace_all(pattern = "_00_", replacement = "_0_") %>%
-            str_replace_all(pattern = "_01_", replacement = "_1_") %>%
-            str_replace_all(pattern = "_02_", replacement = "_2_") %>%
-            str_replace_all(pattern = "_03_", replacement = "_3_") %>%
-            str_replace_all(pattern = "_04_", replacement = "_4_") %>%
-            str_replace_all(pattern = "_05_", replacement = "_5_") %>%
-            str_replace_all(pattern = "_06_", replacement = "_6_") %>%
-            str_replace_all(pattern = "_07_", replacement = "_7_") %>%
-            str_replace_all(pattern = "_08_", replacement = "_8_") %>%
-            str_replace_all(pattern = "_09_", replacement = "_9_") %>%
-            str_replace_all(pattern = "_00_", replacement = "_0_") %>%
-            str_replace_all(pattern = "_01_", replacement = "_1_") %>%
-            str_replace_all(pattern = "_02_", replacement = "_2_") %>%
-            str_replace_all(pattern = "_03_", replacement = "_3_") %>%
-            str_replace_all(pattern = "_04_", replacement = "_4_") %>%
-            str_replace_all(pattern = "_05_", replacement = "_5_") %>%
-            str_replace_all(pattern = "_06_", replacement = "_6_") %>%
-            str_replace_all(pattern = "_07_", replacement = "_7_") %>%
-            str_replace_all(pattern = "_08_", replacement = "_8_") %>%
-            str_replace_all(pattern = "_09_", replacement = "_9_")
-        #
-        message("* Checking remote server...") #TODO add error message here if authentication fails
+        message("* ", length(filenames_local), " existing file(s) detected in local folder.")
         #
         # get file names from remote directory
         filenames_remote =
@@ -150,137 +112,201 @@ cp_pull_loadcells <-
         #
         # subset list of files to download
         filenames_download =
-            setdiff(filenames_remote, filenames_local_for_remote)
+            setdiff(filenames_remote, filenames_local)
         #
-        message("*     ", length(filenames_download), " new file(s) detected on remote server for downloading.", "\n")
+        message("* ", length(filenames_download), " new file(s) detected on remote server.", "\n")
         #
         # download files
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #
-        message("* Downloading file(s) from remote server...")
-        #
-        data_new_raw =
-            filenames_download %>%
-            # iterate over all file names and download the data
-            # plyr:llply() is similar to lapply() but enables progress bars
-            llply(function (x) {
-                getURL(url = paste0(url, x),
+        if (length(filenames_download) != 0) {
+
+            # extract header information from the first file in the list
+            header =
+                getURL(url = paste0(url, filenames_download[[1]]),
                        username = username,
                        keypasswd = "",
                        dirlistonly = TRUE,
                        verbose = TRUE,
                        ssh.private.keyfile = ssh_key) %>%
-                    strsplit(., '\n') %>%
-                    unlist() %>%
-                    tibble() %>%
-                    dplyr::rename(content = ".") %>%
-                    mutate(origin = x)
-            },
-            .progress = "text"
-            )
-        #
-        message("*     ", length(data_new_raw), " file(s) successfully downloaded.", "\n")
-        #TODO: add control that length(data_new_raw) == length(filenames_download)
-        #
-        # clean data
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #
-        data_new_clean =
-            data_new_raw %>%
-            # iterate over all list entries (i.e. data files) and clean
-            lapply(function (x)
-                x %>%
-                    separate(content,
-                             into = c("datetime", "tot_weight", "net_weight", "cell_1", "cell_2", "cell_3", "cell_4", "cell_5", "cell_6"),
-                             sep = ";") %>%
-                    # remove old header
-                    filter(datetime != "DATETIME") %>%
-                    # add leading zeros to datetime
-                    separate(datetime,
-                             into = c("ymd", "HMS"),
-                             sep = " ") %>%
-                    separate(ymd,
-                             into = c("y", "m", "d"),
-                             sep = "-") %>%
-                    separate(HMS,
-                             into = c("H", "M", "S"),
-                             sep = ":") %>%
-                    mutate(m = str_pad(m, 2, pad = "0"),
-                           d = str_pad(d, 2, pad = "0"),
-                           H = str_pad(H, 2, pad = "0"),
-                           M = str_pad(M, 2, pad = "0"),
-                           S = str_pad(S, 6, pad = "0")) %>%
-                    unite(ymd,
-                          y, m, d,
-                          sep = "-",
-                          remove = TRUE) %>%
-                    unite(HMS,
-                          H, M, S,
-                          sep = ":",
-                          remove = TRUE) %>%
-                    unite(datetime,
-                          ymd, HMS,
-                          sep = " ",
-                          remove = TRUE)  %>%
-                    # add leading zeros to origin
-                    separate(origin,
-                             into = c("y", "m", "d", "H"),
-                             sep = "_") %>%
-                    mutate(m = str_pad(m, 2, pad = "0"),
-                           d = str_pad(d, 2, pad = "0")) %>%
-                    unite(origin,
-                          y, m, d, H,
-                          sep = "_",
-                          remove = TRUE) %>%
-                    # parse the correct column types
-                    mutate(datetime = format(as.POSIXct(datetime), usetz = TRUE),
-                           tot_weight = as.numeric(tot_weight),
-                           net_weight  = as.numeric(net_weight ),
-                           cell_1  = as.numeric(cell_1),
-                           cell_2  = as.numeric(cell_2),
-                           cell_3  = as.numeric(cell_3),
-                           cell_4  = as.numeric(cell_4),
-                           cell_5  = as.numeric(cell_5),
-                           cell_6  = as.numeric(cell_6))
-            )
-        #
-        # save files
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        #
-        message("* Saving data files in local folder...")
-        #
-        data_new_clean %>%
-            llply(function (x) {
-                write_csv(x %>%
-                              select(-origin),
-                          path =
-                              # if path is absolute
-                              if (str_detect(save_to, ":/")) {
-                                  paste0(save_to, distinct(x, origin))
-                                  # if path is relative
-                              } else {
-                                  paste0(getwd(), save_to, distinct(x, origin))
-                              } )},
+                strsplit(., '\n') %>%
+                unlist() %>%
+                read_delim(delim = ";", n_max = 0) %>%
+                names() %>%
+                str_trim()
+
+            filenames_download %>%
+                # iterate over all file names and download the data
+                # plyr:llply() is similar to lapply() but enables progress bars
+                plyr::llply(function (x) {
+                    getURL(url = paste0(url, x),
+                           username = username,
+                           keypasswd = "",
+                           dirlistonly = TRUE,
+                           verbose = TRUE,
+                           ssh.private.keyfile = ssh_key) %>%
+                        strsplit(., '\n') %>%
+                        unlist() %>%
+                        tibble() %>%
+                        # TODO remove line below
+                        dplyr::rename(content = ".") %>%
+                        separate(content,
+                                 into = c(header),
+                                 sep = ";") %>%
+                        write_csv(path = paste0(save_to, x),
+                                  col_names = FALSE)
+                },
                 .progress = "text"
-            )
+                )
+
+        }
         #
-        message("*     ", length(data_new_clean), " file(s) successfully saved.", "\n")
-        #
-        # print exit status
+        # print summary
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #
-        exit_status =
+        summary_status =
             paste0("Summary: ",
                    length(filenames_local), " existing, ",
-                   length(data_new_clean), " new, ",
+                   length(filenames_download), " new, ",
                    length(list.files(save_path, pattern = "h.csv")), " total data files in local folder.")
         #
-        message("* ", exit_status)
+        message("* ", summary_status)
         #
         # return first argument invisibly (for pipes)
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #
         invisible(save_to)
+        #
+        #=============================================
+        # END
+    }
+
+# ==============================================================================
+
+
+# ==============================================================================
+# cp_tidy_loadcells
+# ==============================================================================
+
+#' Cleans local load cell data files
+#'
+#' cleans load cell data files available in local folder.
+#'
+#' This function loads carport load cell data files available in a specified
+#' local folder, cleans the data, converts them into tidy format and saves a
+#' .rds file containing all observations. Note, that this function does not
+#' import any data into your R environment, please use other function in the
+#' \emph{carport utility functions} group to import the data into your R
+#' environment.
+#'
+#' @export
+#'
+#' @family carport utility functions
+#'
+#' @param load_from Path to the local folder where the data is stored.
+#' @return .RData file in specified folder containing all data in tidy format.
+
+cp_tidy_loadcells <-
+    function (load_from) {
+
+        # DEFINITIONS AND ERRORS
+        #============================================
+
+        # general definitions
+        export_name = "carport_loadcell.rds"
+
+        # load_from is provided
+        if (missing(load_from)) {
+            stop ("Parameter 'load_from' is not supplied.")
+        }
+        # load_from is character
+        if (!is.character(load_from)) {
+            stop ("Parameter 'load_from' must be a valid path name. Please supply a character string.")
+        }
+        # clean load_from
+        if (str_starts(load_from, "/")) {
+            load_from = str_replace(load_from, "/", "")
+        }
+        if (!str_ends(load_from, "/")) {
+            load_from = paste0(load_from, "/", "")
+        }
+        # load_from is existing folder
+        if (!dir.exists(load_from)) {
+            stop ("Folder 'load_from' does not exist.")
+        }
+
+        # FUNCTION
+        #=============================================
+        #
+        message("* ", "Cleaning data files...", "\n")
+
+        list.files(path = load_from,
+                   pattern = 'h.csv',
+                   full.names = TRUE) %>%
+            plyr::llply(function(x) {
+                read_csv(x,
+                         col_types = cols("DATETIME" = col_character(),
+                                          "GROSS WEITH" = col_double(),
+                                          "NET WEIGHT" = col_double(),
+                                          "CELL 1" = col_double(),
+                                          "CELL 2" = col_double(),
+                                          "CELL 3" = col_double(),
+                                          "CELL 4" = col_double(),
+                                          "CELL 5" = col_double(),
+                                          "CELL 6" = col_double()))
+            },
+            .progress = "text"
+            ) %>%
+            bind_rows() %>%
+            dplyr::rename("datetime" = "DATETIME",
+                          "tot_weight" = "GROSS WEITH",
+                          "net_weight" = "NET WEIGHT",
+                          "cell_1" = "CELL 1",
+                          "cell_2" = "CELL 2",
+                          "cell_3" = "CELL 3",
+                          "cell_4" = "CELL 4",
+                          "cell_5" = "CELL 5",
+                          "cell_6" = "CELL 6") %>%
+            # add leading zeros to datetime
+            separate(datetime,
+                     into = c("ymd", "HMS"),
+                     sep = " ") %>%
+            separate(ymd,
+                     into = c("y", "m", "d"),
+                     sep = "-") %>%
+            separate(HMS,
+                     into = c("H", "M", "S"),
+                     sep = ":") %>%
+            mutate(m = str_pad(m, 2, pad = "0"),
+                   d = str_pad(d, 2, pad = "0"),
+                   H = str_pad(H, 2, pad = "0"),
+                   M = str_pad(M, 2, pad = "0"),
+                   S = str_pad(S, 6, pad = "0")) %>%
+            unite(ymd,
+                  y, m, d,
+                  sep = "-",
+                  remove = TRUE) %>%
+            unite(HMS,
+                  H, M, S,
+                  sep = ":",
+                  remove = TRUE) %>%
+            unite(datetime,
+                  ymd, HMS,
+                  sep = " ",
+                  remove = TRUE) %>%
+            # parse the correct column types
+            mutate(datetime = as.POSIXct(datetime)) %>%
+            # remove duplicates
+            distinct() %T>%
+            write_rds(path = paste0(load_from, export_name))
+
+        message("* ", "Done.", "\n")
+
+
+        # return first argument invisibly (for pipes)
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #
+        invisible(load_from)
         #
         #=============================================
         # END
