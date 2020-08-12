@@ -9,7 +9,7 @@
 
 The goal of ubzutils is to provide useful function for data processing
 in R for people working at the Center for Environmental and
-Buitechnology (UBZ) at the Helmholtz Center for Environmental Research
+Biotechnology (UBZ) at the Helmholtz Center for Environmental Research
 (UFZ) in Leipzig, Germany.
 
 ## Installation
@@ -26,46 +26,6 @@ To load the package use:
 
 ``` r
 library(ubzutils)
-#> Loading required package: dplyr
-#> 
-#> Attaching package: 'dplyr'
-#> The following objects are masked from 'package:stats':
-#> 
-#>     filter, lag
-#> The following objects are masked from 'package:base':
-#> 
-#>     intersect, setdiff, setequal, union
-#> Loading required package: lubridate
-#> 
-#> Attaching package: 'lubridate'
-#> The following objects are masked from 'package:base':
-#> 
-#>     date, intersect, setdiff, union
-#> Loading required package: magrittr
-#> Loading required package: plyr
-#> ------------------------------------------------------------------------------
-#> You have loaded plyr after dplyr - this is likely to cause problems.
-#> If you need functions from both plyr and dplyr, please load plyr first, then dplyr:
-#> library(plyr); library(dplyr)
-#> ------------------------------------------------------------------------------
-#> 
-#> Attaching package: 'plyr'
-#> The following objects are masked from 'package:dplyr':
-#> 
-#>     arrange, count, desc, failwith, id, mutate, rename, summarise,
-#>     summarize
-#> Loading required package: RCurl
-#> Loading required package: stringr
-#> Loading required package: tibble
-#> Loading required package: tidyr
-#> 
-#> Attaching package: 'tidyr'
-#> The following object is masked from 'package:RCurl':
-#> 
-#>     complete
-#> The following object is masked from 'package:magrittr':
-#> 
-#>     extract
 ```
 
 ## Function Families
