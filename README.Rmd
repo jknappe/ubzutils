@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of ubzutils is to provide useful function for data processing in R for people working at the Center for Environmental and Buitechnology (UBZ) at the Helmholtz Center for Environmental Research (UFZ) in Leipzig, Germany.
+The goal of ubzutils is to provide useful function for data processing in R for people working at the Center for Environmental and Biotechnology (UBZ) at the Helmholtz Center for Environmental Research (UFZ) in Leipzig, Germany.
 
 ## Installation
 
@@ -31,7 +31,7 @@ devtools::install_github("jknappe/ubzutils")
 
 To load the package use:
 
-```{r libraries}
+```{r libraries, eval = FALSE}
 library(ubzutils)
 ```
 
