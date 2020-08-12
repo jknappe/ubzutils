@@ -101,6 +101,16 @@ cp_pull_loadcells <-
         str_replace_all(pattern = "_06_", replacement = "_6_") %>%
         str_replace_all(pattern = "_07_", replacement = "_7_") %>%
         str_replace_all(pattern = "_08_", replacement = "_8_") %>%
+        str_replace_all(pattern = "_09_", replacement = "_9_") %>%
+        str_replace_all(pattern = "_00_", replacement = "_0_") %>%
+        str_replace_all(pattern = "_01_", replacement = "_1_") %>%
+        str_replace_all(pattern = "_02_", replacement = "_2_") %>%
+        str_replace_all(pattern = "_03_", replacement = "_3_") %>%
+        str_replace_all(pattern = "_04_", replacement = "_4_") %>%
+        str_replace_all(pattern = "_05_", replacement = "_5_") %>%
+        str_replace_all(pattern = "_06_", replacement = "_6_") %>%
+        str_replace_all(pattern = "_07_", replacement = "_7_") %>%
+        str_replace_all(pattern = "_08_", replacement = "_8_") %>%
         str_replace_all(pattern = "_09_", replacement = "_9_")
     #
     message("* Checking remote server...") #TODO add error message here if authentication fails
