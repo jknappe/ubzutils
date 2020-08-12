@@ -159,7 +159,7 @@ cp_pull_loadcells <-
                 strsplit(., '\n') %>%
                 unlist() %>%
                 tibble() %>%
-                rename(content = ".") %>%
+                dplyr::rename(content = ".") %>%
                 mutate(origin = x)
         },
         .progress = "text"
