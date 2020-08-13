@@ -317,3 +317,75 @@ cp_tidy_loadcells <-
     }
 
 # ==============================================================================
+
+
+# ==============================================================================
+# cp_load_loadcells
+# ==============================================================================
+
+#' Loads carport load cell data into R environment
+#'
+#' loads carport load cell data from local .rds file into R environment.
+#'
+#' This function loads carport load cell data from the uncompressed .rds file
+#' produced by `cp_tidy_loadcells()` into the R environment. Please see the
+#' documentation of other function in the \emph{carport utility functions}
+#' group for preprocessing the data.
+#'
+#' @export
+#'
+#' @family carport utility functions
+#'
+#' @param load_from Path to the local folder where the .rds file is stored.
+#' @return tibble with data loaded from the .rds file in the specified folder.
+
+cp_load_loadcells <-
+    function (load_from) {
+
+        # DEFINITIONS AND ERRORS
+        #============================================
+
+        # general definitions
+        import_name = "carport_loadcell.rds"
+
+        # load_from is provided
+        if (missing(load_from)) {
+            stop ("Parameter 'load_from' is not supplied.")
+        }
+        # load_from is character
+        if (!is.character(load_from)) {
+            stop ("Parameter 'load_from' must be a valid path name. Please supply a character string.")
+        }
+        # clean load_from
+        if (str_starts(load_from, "/")) {
+            load_from = str_replace(load_from, "/", "")
+        }
+        if (!str_ends(load_from, "/")) {
+            load_from = paste0(load_from, "/", "")
+        }
+        # load_from is existing folder
+        if (!dir.exists(load_from)) {
+            stop ("Folder 'load_from' does not exist.")
+        }
+
+        # FUNCTION
+        #=============================================
+        #
+        message("* ", "Loading data files...", "\n")
+
+        output =
+            read_rds(paste0(load_from, import_name))
+
+        return(output)
+
+        message("* ", "Done.", "\n")
+
+
+        #=============================================
+        # END
+    }
+
+# ==============================================================================
+
+
+

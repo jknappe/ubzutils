@@ -29,6 +29,7 @@ environment.
 }
 \seealso{
 Other carport utility functions: 
+\code{\link{cp_load_loadcells}()},
 \code{\link{cp_tidy_loadcells}()}
 }
 \concept{carport utility functions}
