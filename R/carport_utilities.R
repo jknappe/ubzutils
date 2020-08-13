@@ -297,7 +297,11 @@ cp_tidy_loadcells <-
             # parse the correct column types
             mutate(datetime = as.POSIXct(datetime)) %>%
             # remove duplicates
-            distinct() %T>%
+            distinct() %>%
+            # adjust time stamp from RevPi clock
+            mutate(datetime = as_datetime(ifelse(datetime < "2020-08-05 11:09:00",
+                                                 datetime + (as_datetime("2020-08-05 11:09:00") - as_datetime("2020-06-04 08:13:00")),
+                                                 datetime))) %>%
             write_rds(path = paste0(load_from, export_name))
 
         message("* ", "Done.", "\n")
