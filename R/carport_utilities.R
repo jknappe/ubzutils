@@ -295,13 +295,19 @@ cp_tidy_loadcells <-
                   sep = " ",
                   remove = TRUE) %>%
             # parse the correct column types
-            mutate(datetime = as.POSIXct(datetime)) %>%
+            mutate(datetime = format(as.POSIXct(datetime), usetz = TRUE)) %>%
             # remove duplicates
-            distinct() %>%
+            distinct()  %>%
             # adjust time stamp from RevPi clock
-            mutate(datetime = as_datetime(ifelse(datetime < "2020-08-05 11:09:00",
-                                                 datetime + (as_datetime("2020-08-05 11:09:00") - as_datetime("2020-06-04 08:13:00")),
-                                                 datetime))) %>%
+            mutate(datetime = as_datetime(datetime),
+                   datetime2 = as_datetime(ifelse(datetime <= "2020-08-05 11:09:00",
+                                                  datetime %m+% minutes(89456),
+                                                  datetime)),
+                   datetime3 = round_date(as_datetime(datetime2), "minute")) %>%
+            select(-datetime, -datetime2) %>%
+            dplyr::rename(datetime = datetime3) %>%
+            select(datetime, tot_weight, net_weight, starts_with("cell")) %>%
+            # export as .rds file
             write_rds(path = paste0(load_from, export_name))
 
         message("* ", "Done.", "\n")
