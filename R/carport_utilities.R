@@ -168,7 +168,7 @@ cp_pull_loadcells <-
             paste0("Summary: ",
                    length(filenames_local), " existing, ",
                    length(filenames_download), " new, ",
-                   length(list.files(save_path, pattern = "h.csv")), " total data files in local folder.")
+                   length(list.files(save_to, pattern = "h.csv")), " total data files in local folder.")
         #
         message("* ", summary_status)
         #
@@ -387,5 +387,68 @@ cp_load_loadcells <-
 
 # ==============================================================================
 
+
+# ==============================================================================
+# cp_load_loadcells
+# ==============================================================================
+
+#' Loads carport load cell data into R environment
+#'
+#' loads carport load cell data from local .rds file into R environment.
+#'
+#' This function loads carport load cell data from the uncompressed .rds file
+#' produced by `cp_tidy_loadcells()` into the R environment. Please see the
+#' documentation of other function in the \emph{carport utility functions}
+#' group for preprocessing the data.
+#'
+#' @export
+#'
+#' @family carport utility functions
+#'
+#' @param load_from Path to the local folder where the .rds file is stored.
+#' @return tibble with data loaded from the .rds file in the specified folder.
+
+cp_read_events <-
+    function (file) {
+
+        # DEFINITIONS AND ERRORS
+        #============================================
+
+        # file is provided
+        if (missing(file)) {
+            stop ("Parameter 'file' is not supplied.")
+        }
+        # file is character
+        if (!is.character(file)) {
+            stop ("Parameter 'file' must be a valid path name. Please supply a character string.")
+        }
+        # clean file
+        if (str_starts(file, "/")) {
+            load_from = str_replace(file, "/", "")
+        }
+        # file ends with .xlsx
+        if (!endsWith(file, "xlsx")) {
+            stop ("Parameter 'file' must be a .xlsx file.")
+        }
+        # file is existing file
+        if (!file.exists(file)) {
+            stop ("File 'file' does not exist.")
+        }
+
+        # FUNCTION
+        #=============================================
+        #
+
+        output =
+            read_xlsx(file)
+
+        return(output)
+
+
+        #=============================================
+        # END
+    }
+
+# ==============================================================================
 
 
