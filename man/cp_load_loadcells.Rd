@@ -24,6 +24,7 @@ group for preprocessing the data.
 \seealso{
 Other carport utility functions: 
 \code{\link{cp_pull_loadcells}()},
+\code{\link{cp_read_events}()},
 \code{\link{cp_tidy_loadcells}()}
 }
 \concept{carport utility functions}

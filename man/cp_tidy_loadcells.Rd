@@ -26,6 +26,7 @@ environment.
 \seealso{
 Other carport utility functions: 
 \code{\link{cp_load_loadcells}()},
-\code{\link{cp_pull_loadcells}()}
+\code{\link{cp_pull_loadcells}()},
+\code{\link{cp_read_events}()}
 }
 \concept{carport utility functions}

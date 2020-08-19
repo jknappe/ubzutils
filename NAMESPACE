@@ -2,5 +2,6 @@
 
 export(cp_load_loadcells)
 export(cp_pull_loadcells)
+export(cp_read_events)
 export(cp_tidy_loadcells)
 export(is_error)
