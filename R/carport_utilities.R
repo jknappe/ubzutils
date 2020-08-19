@@ -295,7 +295,7 @@ cp_tidy_loadcells <-
                   sep = " ",
                   remove = TRUE) %>%
             # parse the correct column types
-            mutate(datetime = format(as.POSIXct(datetime), usetz = TRUE)) %>%
+            mutate(datetime = as.POSIXct(datetime, tz="Europe/Berlin")) %>%
             # remove duplicates
             distinct()  %>%
             # adjust time stamp from RevPi clock
@@ -323,6 +323,96 @@ cp_tidy_loadcells <-
     }
 
 # ==============================================================================
+
+test =
+    list.files(path = load_from,
+               pattern = 'h.csv',
+               full.names = TRUE) %>%
+    plyr::llply(function(x) {
+        read_csv(x,
+                 col_types = cols("DATETIME" = col_character(),
+                                  "GROSS WEITH" = col_double(),
+                                  "NET WEIGHT" = col_double(),
+                                  "CELL 1" = col_double(),
+                                  "CELL 2" = col_double(),
+                                  "CELL 3" = col_double(),
+                                  "CELL 4" = col_double(),
+                                  "CELL 5" = col_double(),
+                                  "CELL 6" = col_double()))
+    },
+    .progress = "text"
+    ) %>%
+    bind_rows() %>%
+    dplyr::rename("datetime" = "DATETIME",
+                  "tot_weight" = "GROSS WEITH",
+                  "net_weight" = "NET WEIGHT",
+                  "cell_1" = "CELL 1",
+                  "cell_2" = "CELL 2",
+                  "cell_3" = "CELL 3",
+                  "cell_4" = "CELL 4",
+                  "cell_5" = "CELL 5",
+                  "cell_6" = "CELL 6") %>%
+    # add leading zeros to datetime
+    separate(datetime,
+             into = c("ymd", "HMS"),
+             sep = " ") %>%
+    separate(ymd,
+             into = c("y", "m", "d"),
+             sep = "-") %>%
+    separate(HMS,
+             into = c("H", "M", "S"),
+             sep = ":") %>%
+    separate(S,
+             into = c("sec", "millis"),
+             sep = "\\.") %>%
+    select(-millis) %>%
+    mutate(m = str_pad(m, 2, pad = "0"),
+           d = str_pad(d, 2, pad = "0"),
+           H = str_pad(H, 2, pad = "0"),
+           M = str_pad(M, 2, pad = "0"),
+           sec = str_pad(sec, 2, pad = "0")) %>%
+    unite(ymd,
+          y, m, d,
+          sep = "-",
+          remove = TRUE) %>%
+    unite(HMS,
+          H, M, sec,
+          sep = ":",
+          remove = TRUE) %>%
+    unite(datetime,
+          ymd, HMS,
+          sep = " ",
+          remove = TRUE) %>%
+    # parse the correct column types
+    mutate(
+        datetime = as.POSIXct(
+            datetime,
+            tz="Europe/Berlin"
+        ),
+        datetime = as_datetime(
+            ifelse(
+                datetime <= "2020-08-05 11:09:00",
+                datetime + minutes(89456),
+                datetime
+            ),
+            tz="Europe/Berlin"
+        ),
+        tz = tz(
+            datetime
+        )
+    )
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # ==============================================================================
@@ -395,24 +485,22 @@ cp_load_loadcells <-
 
 
 # ==============================================================================
-# cp_load_loadcells
+# cp_read_events
 # ==============================================================================
 
-#' Loads carport load cell data into R environment
+#' Reads carport events data into R environment
 #'
-#' loads carport load cell data from local .rds file into R environment.
+#' reads carport event data from local .xlsx file into R environment.
 #'
-#' This function loads carport load cell data from the uncompressed .rds file
-#' produced by `cp_tidy_loadcells()` into the R environment. Please see the
-#' documentation of other function in the \emph{carport utility functions}
-#' group for preprocessing the data.
+#' This function loads carport event data from an .xlsx file into the R
+#' environment. Please see the documentation of other function in the
+#' \emph{carport utility functions} group for reading load cell data.
 #'
 #' @export
 #'
 #' @family carport utility functions
 #'
-#' @param load_from Path to the local folder where the .rds file is stored.
-#' @return tibble with data loaded from the .rds file in the specified folder.
+#' @param file Path to the local .xlsx file.
 
 cp_read_events <-
     function (file) {
